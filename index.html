@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuildCRM — Demo</title>
+<style>
+:root {
+  --sidebar:#1a2332; --sidebar-hover:#243044; --sidebar-active:#2d3f56;
+  --accent:#e67e22; --accent2:#2980b9; --tg:#2AABEE;
+  --bg:#f0f3f7; --card:#fff; --text:#1e293b; --muted:#64748b; --border:#e2e8f0;
+  --success:#16a34a; --warn:#d97706; --danger:#dc2626;
+  --radius:10px; --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.04);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.45}
+button,input,select{font:inherit}
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1a2332 0%,#2d3f56 50%,#1a3a4a 100%);padding:24px}
+.login-card{background:#fff;border-radius:16px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
+.login-logo{width:64px;height:64px;background:linear-gradient(135deg,var(--accent),#f39c12);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;color:#fff;font-weight:800}
+.login-card h1{font-size:22px;margin-bottom:6px}
+.login-card .sub{color:var(--muted);margin-bottom:8px;font-size:13px}
+.demo-badge{display:inline-block;background:#fef3c7;color:#92400e;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;margin-bottom:24px}
+.btn-tg{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:var(--tg);color:#fff;border:none;border-radius:10px;padding:14px 20px;font-size:15px;font-weight:600;cursor:pointer}
+.btn-tg:hover{background:#229ed9}
+.btn-tg svg{width:22px;height:22px;fill:currentColor}
+.login-note{margin-top:16px;font-size:12px;color:var(--muted);line-height:1.5}
+.login-langs{margin-top:24px;display:flex;gap:8px;justify-content:center}
+.login-langs .lang-btn{flex:0;padding:6px 12px;background:#f1f5f9;color:#64748b;border:none;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700}
+.login-langs .lang-btn.active{background:var(--accent);color:#fff}
+#app{display:none;min-height:100vh}
+#app.open{display:flex}
+.sidebar{width:240px;background:var(--sidebar);color:#cbd5e1;display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh}
+.sidebar-brand{padding:20px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(255,255,255,.06)}
+.sidebar-brand .mark{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),#f39c12);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px}
+.sidebar-brand .name{color:#fff;font-weight:700;font-size:15px}
+.sidebar-brand .tag{font-size:10px;color:#94a3b8;margin-top:1px}
+.nav{padding:12px 10px;flex:1;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;color:#94a3b8;cursor:pointer;border:none;background:transparent;width:100%;text-align:left;font-size:13.5px;font-weight:500;margin-bottom:2px}
+.nav-item:hover{background:var(--sidebar-hover);color:#e2e8f0}
+.nav-item.active{background:var(--sidebar-active);color:#fff}
+.nav-item .ico{width:18px;text-align:center;font-size:15px}
+.nav-item .badge{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px}
+.sidebar-foot{padding:14px 16px;border-top:1px solid rgba(255,255,255,.06);font-size:12px}
+.user-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--accent2);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+.user-row .uname{color:#e2e8f0;font-weight:600;font-size:13px}
+.user-row .urole{color:#64748b;font-size:11px}
+.lang-switch{display:flex;gap:4px;background:rgba(0,0,0,.25);border-radius:8px;padding:3px}
+.lang-btn{flex:1;border:none;background:transparent;color:#94a3b8;padding:6px 0;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.5px}
+.lang-btn.active{background:var(--accent);color:#fff}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:0;z-index:20}
+.topbar h2{font-size:18px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.search-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;width:240px;outline:none}
+.content{padding:24px 28px;flex:1}
+.page{display:none}.page.active{display:block}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.kpi{background:var(--card);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);border:1px solid var(--border)}
+.kpi .label{color:var(--muted);font-size:12px;font-weight:500;margin-bottom:6px}
+.kpi .value{font-size:24px;font-weight:800;letter-spacing:-.3px}
+.kpi .delta{font-size:12px;margin-top:6px;font-weight:600}
+.kpi .delta.up{color:var(--success)}.kpi .delta.down{color:var(--danger)}
+.kpi.accent-bar{border-top:3px solid var(--accent)}.kpi.blue-bar{border-top:3px solid var(--accent2)}
+.kpi.warn-bar{border-top:3px solid var(--warn)}.kpi.green-bar{border-top:3px solid var(--success)}
+.grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden}
+.card-h{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:14px}
+.card-b{padding:16px 18px}
+.chart-wrap{height:180px}
+.activity-list{list-style:none}
+.activity-list li{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.activity-list li:last-child{border-bottom:none}
+.act-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.act-dot.orange{background:var(--accent)}.act-dot.blue{background:var(--accent2)}
+.act-dot.green{background:var(--success)}.act-dot.red{background:var(--danger)}
+.act-time{color:var(--muted);font-size:11px;margin-top:2px}
+.tg-preview{background:#e8f6fd;border:1px solid #b6e3f7;border-radius:12px;padding:14px}
+.tg-preview .tg-head{display:flex;align-items:center;gap:8px;font-weight:700;color:#1a6a8a;margin-bottom:8px;font-size:13px}
+.tg-msg{background:#fff;border-radius:10px;padding:10px 12px;font-size:12.5px;box-shadow:0 1px 2px rgba(0,0,0,.06);margin-bottom:8px}
+.tg-msg:last-child{margin-bottom:0}
+.tg-msg .tm{color:var(--muted);font-size:10px;margin-top:4px;text-align:right}
+.toolbar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.toolbar input,.toolbar select{background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 12px;outline:none}
+.toolbar input{min-width:220px}
+.btn{border:none;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:#d35400}
+.btn-secondary{background:#fff;border:1px solid var(--border);color:var(--text)}
+.table-wrap{overflow-x:auto}
+table.data{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);border:1px solid var(--border)}
+table.data th{background:#f8fafc;text-align:left;padding:11px 14px;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;border-bottom:1px solid var(--border);white-space:nowrap}
+table.data td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+table.data tr:last-child td{border-bottom:none}
+table.data tr:hover td{background:#f8fafc}
+.pill{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.pill-ok{background:#dcfce7;color:#166534}.pill-warn{background:#fef3c7;color:#92400e}
+.pill-danger{background:#fee2e2;color:#991b1b}.pill-info{background:#dbeafe;color:#1e40af}
+.pill-nav{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+.pill-muted{background:#f1f5f9;color:#475569}
+.stock-bar{height:6px;background:#e2e8f0;border-radius:3px;width:70px;overflow:hidden}
+.stock-bar>span{display:block;height:100%;border-radius:3px}
+.split{display:grid;grid-template-columns:320px 1fr;gap:16px}
+.client-list .cli{padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer}
+.client-list .cli:hover,.client-list .cli.active{background:#f0f7ff}
+.cli .cn{font-weight:700;font-size:13px}.cli .cm{color:var(--muted);font-size:12px;margin-top:2px}
+.section-title{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin:18px 0 10px}
+.section-title:first-child{margin-top:0}
+.est-table{width:100%;border-collapse:collapse;font-size:13px}
+.est-table th{text-align:left;font-size:11px;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--border)}
+.est-table td{padding:8px;border-bottom:1px solid var(--border)}
+.est-table tr:last-child td{border-bottom:none}
+.role-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.role-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);text-align:center}
+.role-card .ra{width:52px;height:52px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px}
+.role-card h4{font-size:14px;margin-bottom:4px}
+.role-card .rr{color:var(--muted);font-size:12px;margin-bottom:10px}
+.perms{text-align:left;font-size:12px;color:var(--muted)}.perms li{margin:4px 0 4px 16px}
+.emp-table{margin-top:20px}
+.empty{text-align:center;color:var(--muted);padding:40px}
+.del-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.del-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);border-left:3px solid var(--accent2)}
+.del-card.st-pending{border-left-color:var(--warn)}.del-card.st-route{border-left-color:var(--accent)}.del-card.st-done{border-left-color:var(--success)}
+.del-card .dh{font-weight:700;font-size:13px;margin-bottom:4px}
+.del-card .dm{color:var(--muted);font-size:12px;margin-bottom:8px}
+.del-card .df{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+@media(max-width:1100px){.kpi-grid,.del-grid,.role-cards{grid-template-columns:repeat(2,1fr)}.grid-2,.split{grid-template-columns:1fr}}
+@media(max-width:760px){.sidebar{display:none}.kpi-grid,.del-grid,.role-cards{grid-template-columns:1fr}.content{padding:16px}.topbar{padding:12px 16px}.search-box{width:140px}}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">B</div>
+    <h1 data-i18n="login_title">BuildCRM</h1>
+    <p class="sub" data-i18n="login_sub">Строймагазин</p>
+    <div class="demo-badge" data-i18n="demo_badge">DEMO — пример данных</div>
+    <button class="btn-tg" id="btn-login" type="button">
+      <svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.693-1.653-1.124-2.678-1.8-1.185-.781-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.121.099.155.232.171.326.016.093.036.305.02.47z"/></svg>
+      <span data-i18n="login_btn">Войти через Telegram</span>
+    </button>
+    <p class="login-note" data-i18n="login_note">Подтверждение придёт в Telegram-бот. Нажмите кнопку — вход симулирован для демо.</p>
+    <div class="login-langs">
+      <button class="lang-btn" data-setlang="ru" type="button">RU</button>
+      <button class="lang-btn" data-setlang="ro" type="button">RO</button>
+      <button class="lang-btn" data-setlang="hu" type="button">HU</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="mark">B</div>
+      <div>
+        <div class="name">BuildCRM</div>
+        <div class="tag" data-i18n="demo_tag">Demo · Magyarország</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item" data-nav="dashboard" type="button"><span class="ico">📊</span><span data-i18n="nav_dashboard">Панель</span></button>
+      <button class="nav-item" data-nav="warehouse" type="button"><span class="ico">📦</span><span data-i18n="nav_warehouse">Склад</span></button>
+      <button class="nav-item" data-nav="sales" type="button"><span class="ico">🧾</span><span data-i18n="nav_sales">Продажи</span></button>
+      <button class="nav-item" data-nav="clients" type="button"><span class="ico">👥</span><span data-i18n="nav_clients">Клиенты</span></button>
+      <button class="nav-item" data-nav="suppliers" type="button"><span class="ico">🚚</span><span data-i18n="nav_suppliers">Поставщики</span><span class="badge">3</span></button>
+      <button class="nav-item" data-nav="deliveries" type="button"><span class="ico">📍</span><span data-i18n="nav_deliveries">Доставки</span></button>
+      <button class="nav-item" data-nav="employees" type="button"><span class="ico">🧑‍💼</span><span data-i18n="nav_employees">Сотрудники</span></button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="user-row">
+        <div class="avatar">VM</div>
+        <div>
+          <div class="uname">Vitaliy M.</div>
+          <div class="urole" data-i18n="role_owner">Владелец</div>
+        </div>
+      </div>
+      <div class="lang-switch">
+        <button class="lang-btn" data-setlang="ru" type="button">RU</button>
+        <button class="lang-btn" data-setlang="ro" type="button">RO</button>
+        <button class="lang-btn" data-setlang="hu" type="button">HU</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <h2 id="page-title">—</h2>
+      <div class="topbar-right">
+        <input class="search-box" id="global-search" type="search" data-i18n-placeholder="search_ph" placeholder="Поиск…">
+        <span class="pill pill-warn" data-i18n="demo_badge_short">DEMO</span>
+      </div>
+    </header>
+    <div class="content">
+
+      <section class="page" id="page-dashboard">
+        <div class="kpi-grid">
+          <div class="kpi accent-bar">
+            <div class="label" data-i18n="kpi_sales_today">Продажи сегодня</div>
+            <div class="value">611 700 Ft</div>
+            <div class="delta up">▲ 12% <span data-i18n="vs_yesterday">к вчера</span></div>
+          </div>
+          <div class="kpi blue-bar">
+            <div class="label" data-i18n="kpi_awaiting">Ожидают выдачи</div>
+            <div class="value">2</div>
+            <div class="delta up">2 <span data-i18n="kpi_delivery_today">доставки сегодня</span></div>
+          </div>
+          <div class="kpi warn-bar">
+            <div class="label" data-i18n="kpi_low_stock">Мало на складе</div>
+            <div class="value">4</div>
+            <div class="delta down" data-i18n="need_restock">нужен заказ</div>
+          </div>
+          <div class="kpi green-bar">
+            <div class="label" data-i18n="kpi_avg_receipt">Средний чек</div>
+            <div class="value">146 943 Ft</div>
+            <div class="delta up">▲ 5% <span data-i18n="vs_last_month">к прошлому</span></div>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-h"><span data-i18n="chart_title">Продажи за 7 дней</span></div>
+            <div class="card-b chart-wrap"><canvas id="salesChart" width="640" height="180"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><span data-i18n="tg_preview_title">Уведомления Telegram</span></div>
+            <div class="card-b">
+              <div class="tg-preview">
+                <div class="tg-head">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#2AABEE"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.693-1.653-1.124-2.678-1.8-1.185-.781-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.141.121.099.155.232.171.326.016.093.036.305.02.47z"/></svg>
+                  BuildCRM Bot
+                </div>
+                <div class="tg-msg">
+                  <strong data-i18n="tg_msg1_t">⚠️ Низкий остаток</strong><br>
+                  <span data-i18n="tg_msg1_b">Цемент 25 кг — осталось 8 мешков (мин. 20)</span>
+                  <div class="tm">10:42</div>
+                </div>
+                <div class="tg-msg">
+                  <strong data-i18n="tg_msg2_t">📦 Партия от поставщика</strong><br>
+                  <span data-i18n="tg_msg2_b">BauTrade Kft. · PO-441 · прибыла на склад</span>
+                  <div class="tm">09:30</div>
+                </div>
+                <div class="tg-msg">
+                  <strong data-i18n="tg_msg3_t">🛒 Крупный заказ</strong><br>
+                  <span data-i18n="tg_msg3_b">SC Construct SRL · 487 200 Ft · самовывоз</span>
+                  <div class="tm">08:22</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><span data-i18n="activity_title">Недавняя активность</span></div>
+          <div class="card-b">
+            <ul class="activity-list">
+              <li><span class="act-dot orange"></span><div><div data-i18n="act1">Продажа #S-1042 — 124 500 Ft (касса NAV)</div><div class="act-time">09:48 · Nagy Péter</div></div></li>
+              <li><span class="act-dot blue"></span><div><div data-i18n="act2">Заказ поставщику PO-442 создан (Holcim HU)</div><div class="act-time">09:10 · Popescu Maria</div></div></li>
+              <li><span class="act-dot green"></span><div><div data-i18n="act3">Доставка #D-118 назначена на сегодня 14:00</div><div class="act-time">08:55 · Kovács Gábor</div></div></li>
+              <li><span class="act-dot red"></span><div><div data-i18n="act4">Низкий остаток: Гипсокартон 12.5 мм</div><div class="act-time">Вчера 14:02 · система</div></div></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-warehouse">
+        <div class="toolbar">
+          <input type="search" id="wh-search" data-i18n-placeholder="search_product" placeholder="Поиск товара…">
+          <select id="wh-cat">
+            <option value="" data-i18n="all_cats">Все категории</option>
+            <option value="cement" data-i18n="cat_cement">Цемент / бетон</option>
+            <option value="paint" data-i18n="cat_paint">Краски</option>
+            <option value="tools" data-i18n="cat_tools">Инструмент</option>
+            <option value="finish" data-i18n="cat_finish">Отделка</option>
+            <option value="plumbing" data-i18n="cat_plumbing">Сантехника</option>
+          </select>
+          <button class="btn btn-primary" type="button">＋ <span data-i18n="add_product">Товар</span></button>
+        </div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th data-i18n="th_name">Название</th>
+                <th data-i18n="th_category">Категория</th>
+                <th data-i18n="th_stock">Остаток</th>
+                <th data-i18n="th_unit">Ед.</th>
+                <th data-i18n="th_price">Цена</th>
+                <th data-i18n="th_status">Статус</th>
+              </tr>
+            </thead>
+            <tbody id="wh-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-sales">
+        <div class="toolbar">
+          <input type="search" data-i18n-placeholder="search_order" placeholder="Поиск заказа…">
+          <select>
+            <option data-i18n="all_statuses">Все статусы</option>
+            <option data-i18n="st_paid">Оплачен</option>
+            <option data-i18n="st_pending">Ожидает</option>
+            <option data-i18n="st_pickup">К выдаче</option>
+            <option data-i18n="st_refund">Возврат</option>
+          </select>
+          <button class="btn btn-secondary" type="button" data-i18n="export">Экспорт</button>
+        </div>
+        <p style="margin-bottom:14px;color:var(--muted);font-size:12.5px;" data-i18n="nav_note">Чеки печатает онлайн-касса, подключённая к NAV. Счета-фактуры отправляются в NAV Online Számla.</p>
+        <div class="table-wrap">
+          <table class="data">
+            <thead>
+              <tr>
+                <th data-i18n="th_order">Заказ</th>
+                <th data-i18n="th_date">Дата</th>
+                <th data-i18n="th_client">Клиент</th>
+                <th data-i18n="th_amount">Сумма</th>
+                <th data-i18n="th_status">Статус</th>
+                <th>NAV</th>
+              </tr>
+            </thead>
+            <tbody id="sales-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-clients">
+        <div class="split">
+          <div class="card">
+            <div class="card-h"><span data-i18n="clients_list">Клиенты</span></div>
+            <div class="client-list" id="client-list"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><span data-i18n="client_card">Карточка клиента</span></div>
+            <div class="card-b" id="client-detail"><p class="empty" data-i18n="select_client">Выберите клиента</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-suppliers">
+        <div class="toolbar">
+          <button class="btn btn-primary" type="button">＋ <span data-i18n="new_po">Заказ поставщику</span></button>
+          <span style="color:var(--muted);font-size:12px;" data-i18n="suppliers_hint">Закупки и входящие поставки</span>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-h"><span data-i18n="suppliers_list">Поставщики</span></div>
+          <div class="table-wrap">
+            <table class="data"><thead><tr>
+              <th data-i18n="th_name">Название</th>
+              <th data-i18n="th_contact">Контакт</th>
+              <th data-i18n="th_city">Город</th>
+              <th data-i18n="th_open_pos">Открытые PO</th>
+            </tr></thead><tbody id="sup-body"></tbody></table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><span data-i18n="po_list">Заказы и поставки</span></div>
+          <div class="table-wrap">
+            <table class="data"><thead><tr>
+              <th>PO</th>
+              <th data-i18n="th_supplier">Поставщик</th>
+              <th data-i18n="th_date">Дата</th>
+              <th data-i18n="th_items">Позиции</th>
+              <th data-i18n="th_amount">Сумма</th>
+              <th data-i18n="th_status">Статус</th>
+            </tr></thead><tbody id="po-body"></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="page-deliveries">
+        <div class="toolbar">
+          <button class="btn btn-primary" type="button">＋ <span data-i18n="new_delivery">Доставка</span></button>
+          <span style="color:var(--muted);font-size:12px;" data-i18n="deliveries_hint">Выдача со склада и доставка клиентам</span>
+        </div>
+        <div class="del-grid" id="del-kpis"></div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr>
+              <th data-i18n="th_delivery">Доставка</th>
+              <th data-i18n="th_client">Клиент</th>
+              <th data-i18n="address">Адрес</th>
+              <th data-i18n="th_when">Когда</th>
+              <th data-i18n="th_driver">Водитель</th>
+              <th data-i18n="th_amount">Сумма</th>
+              <th data-i18n="th_status">Статус</th>
+            </tr></thead>
+            <tbody id="del-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="page" id="page-employees">
+        <div class="role-cards">
+          <div class="role-card">
+            <div class="ra" style="background:#e67e22">👑</div>
+            <h4 data-i18n="role_owner">Владелец</h4>
+            <div class="rr" data-i18n="role_owner_desc">Полный доступ</div>
+            <ul class="perms">
+              <li data-i18n="perm_all">Все модули и настройки</li>
+              <li data-i18n="perm_finance">Финансы и отчёты</li>
+              <li data-i18n="perm_users">Управление сотрудниками</li>
+            </ul>
+          </div>
+          <div class="role-card">
+            <div class="ra" style="background:#2980b9">🛒</div>
+            <h4 data-i18n="role_seller">Продавец</h4>
+            <div class="rr" data-i18n="role_seller_desc">Магазин и касса</div>
+            <ul class="perms">
+              <li data-i18n="perm_sales">Продажи и клиенты</li>
+              <li data-i18n="perm_stock_view">Склад (просмотр)</li>
+              <li data-i18n="perm_no_finance">Без полного доступа к финансам</li>
+            </ul>
+          </div>
+          <div class="role-card">
+            <div class="ra" style="background:#16a34a">📦</div>
+            <h4 data-i18n="role_storekeeper">Кладовщик</h4>
+            <div class="rr" data-i18n="role_storekeeper_desc">Склад и приёмка</div>
+            <ul class="perms">
+              <li data-i18n="perm_stock">Остатки и оприходование</li>
+              <li data-i18n="perm_po_recv">Приёмка от поставщиков</li>
+              <li data-i18n="perm_pick">Сборка заказов</li>
+            </ul>
+          </div>
+          <div class="role-card">
+            <div class="ra" style="background:#7c3aed">📋</div>
+            <h4 data-i18n="role_manager">Менеджер</h4>
+            <div class="rr" data-i18n="role_manager_desc">Закупки и доставки</div>
+            <ul class="perms">
+              <li data-i18n="perm_po">Заказы поставщикам</li>
+              <li data-i18n="perm_del">Планирование доставок</li>
+              <li data-i18n="perm_reports">Отчёты по продажам</li>
+            </ul>
+          </div>
+        </div>
+        <div class="card emp-table">
+          <div class="card-h"><span data-i18n="team_title">Команда</span></div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead><tr>
+                <th data-i18n="th_name">Имя</th>
+                <th data-i18n="th_role">Роль</th>
+                <th>Telegram</th>
+                <th data-i18n="th_lang">Язык</th>
+                <th data-i18n="th_status">Статус</th>
+              </tr></thead>
+              <tbody id="emp-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const I18N = {
+ru:{
+login_title:"BuildCRM",login_sub:"Строймагазин",
+demo_badge:"DEMO — пример данных",demo_badge_short:"DEMO",demo_tag:"Demo · Magyarország",
+login_btn:"Войти через Telegram",
+login_note:"Подтверждение придёт в Telegram-бот. Нажмите кнопку — вход симулирован для демо.",
+nav_dashboard:"Панель",nav_warehouse:"Склад",nav_sales:"Продажи",nav_clients:"Клиенты",
+nav_suppliers:"Поставщики",nav_deliveries:"Доставки",nav_employees:"Сотрудники",
+role_owner:"Владелец",role_seller:"Продавец",role_storekeeper:"Кладовщик",role_manager:"Менеджер",
+search_ph:"Поиск…",
+title_dashboard:"Панель управления",title_warehouse:"Склад / Товары",title_sales:"Продажи / Заказы",
+title_clients:"Клиенты",title_suppliers:"Поставщики и закупки",title_deliveries:"Доставки",
+title_employees:"Сотрудники и роли",
+kpi_sales_today:"Продажи сегодня",kpi_awaiting:"Ожидают выдачи",kpi_low_stock:"Мало на складе",
+kpi_avg_receipt:"Средний чек",kpi_delivery_today:"доставки сегодня",
+vs_yesterday:"к вчера",vs_last_month:"к прошлому",need_restock:"нужен заказ",
+chart_title:"Продажи за 7 дней",tg_preview_title:"Уведомления Telegram",
+tg_msg1_t:"⚠️ Низкий остаток",tg_msg1_b:"Цемент 25 кг — осталось 8 мешков (мин. 20)",
+tg_msg2_t:"📦 Партия от поставщика",tg_msg2_b:"BauTrade Kft. · PO-441 · прибыла на склад",
+tg_msg3_t:"🛒 Крупный заказ",tg_msg3_b:"SC Construct SRL · 487 200 Ft · самовывоз",
+activity_title:"Недавняя активность",
+act1:"Продажа #S-1042 — 124 500 Ft (касса NAV)",
+act2:"Заказ поставщику PO-442 создан (Holcim HU)",
+act3:"Доставка #D-118 назначена на сегодня 14:00",
+act4:"Низкий остаток: Гипсокартон 12.5 мм",
+search_product:"Поиск товара…",all_cats:"Все категории",
+cat_cement:"Цемент / бетон",cat_paint:"Краски",cat_tools:"Инструмент",cat_finish:"Отделка",cat_plumbing:"Сантехника",
+add_product:"Товар",
+th_name:"Название",th_category:"Категория",th_stock:"Остаток",th_unit:"Ед.",th_price:"Цена",th_status:"Статус",
+th_order:"Заказ",th_date:"Дата",th_client:"Клиент",th_amount:"Сумма",th_role:"Роль",th_lang:"Язык",
+th_contact:"Контакт",th_city:"Город",th_open_pos:"Открытые PO",th_supplier:"Поставщик",th_items:"Позиции",
+th_delivery:"Доставка",th_when:"Когда",th_driver:"Водитель",th_qty:"Кол-во",
+st_ok:"В норме",st_low:"Мало",st_out:"Нет",st_paid:"Оплачен",st_pending:"Ожидает",st_pickup:"К выдаче",st_refund:"Возврат",
+st_ordered:"Заказано",st_shipped:"В пути",st_received:"Принято",st_route:"В рейсе",st_delivered:"Доставлено",
+all_statuses:"Все статусы",search_order:"Поиск заказа…",export:"Экспорт",
+nav_note:"Чеки печатает онлайн-касса, подключённая к NAV. Счета-фактуры отправляются в NAV Online Számla.",
+nav_sent:"NAV: отправлено",nav_receipt:"Чек NAV",
+clients_list:"Клиенты",client_card:"Карточка клиента",select_client:"Выберите клиента",
+history_purchases:"Покупки",phone:"Телефон",address:"Адрес",
+new_po:"Заказ поставщику",suppliers_hint:"Закупки и входящие поставки",suppliers_list:"Поставщики",po_list:"Заказы и поставки",
+new_delivery:"Доставка",deliveries_hint:"Выдача со склада и доставка клиентам",
+del_today:"Сегодня",del_pending:"Ожидают",del_route:"В рейсе",
+role_owner_desc:"Полный доступ",role_seller_desc:"Магазин и касса",
+role_storekeeper_desc:"Склад и приёмка",role_manager_desc:"Закупки и доставки",
+perm_all:"Все модули и настройки",perm_finance:"Финансы и отчёты",perm_users:"Управление сотрудниками",
+perm_sales:"Продажи и клиенты",perm_stock_view:"Склад (просмотр)",perm_no_finance:"Без полного доступа к финансам",
+perm_stock:"Остатки и оприходование",perm_po_recv:"Приёмка от поставщиков",perm_pick:"Сборка заказов",
+perm_po:"Заказы поставщикам",perm_del:"Планирование доставок",perm_reports:"Отчёты по продажам",
+team_title:"Команда",active:"Активен",
+unit_bag:"меш.",unit_pcs:"шт.",unit_m:"м",unit_m2:"м²",unit_l:"л",
+weekdays:["Пн","Вт","Ср","Чт","Пт","Сб","Вс"],
+catLabel:{cement:"Цемент / бетон",paint:"Краски",tools:"Инструмент",finish:"Отделка",plumbing:"Сантехника"}
+},
+ro:{
+login_title:"BuildCRM",login_sub:"Magazin de materiale",
+demo_badge:"DEMO — date de exemplu",demo_badge_short:"DEMO",demo_tag:"Demo · Magyarország",
+login_btn:"Autentificare cu Telegram",
+login_note:"Confirmarea vine pe botul Telegram. Apăsați butonul — autentificare simulată pentru demo.",
+nav_dashboard:"Panou",nav_warehouse:"Depozit",nav_sales:"Vânzări",nav_clients:"Clienți",
+nav_suppliers:"Furnizori",nav_deliveries:"Livrări",nav_employees:"Angajați",
+role_owner:"Proprietar",role_seller:"Vânzător",role_storekeeper:"Magazinier",role_manager:"Manager",
+search_ph:"Căutare…",
+title_dashboard:"Panou de control",title_warehouse:"Depozit / Produse",title_sales:"Vânzări / Comenzi",
+title_clients:"Clienți",title_suppliers:"Furnizori și achiziții",title_deliveries:"Livrări",
+title_employees:"Angajați și roluri",
+kpi_sales_today:"Vânzări azi",kpi_awaiting:"Așteaptă ridicarea",kpi_low_stock:"Stoc redus",
+kpi_avg_receipt:"Bon mediu",kpi_delivery_today:"livrări azi",
+vs_yesterday:"față de ieri",vs_last_month:"față de luna trecută",need_restock:"necesită aprovizionare",
+chart_title:"Vânzări pe 7 zile",tg_preview_title:"Notificări Telegram",
+tg_msg1_t:"⚠️ Stoc redus",tg_msg1_b:"Ciment 25 kg — au rămas 8 saci (min. 20)",
+tg_msg2_t:"📦 Livrare de la furnizor",tg_msg2_b:"BauTrade Kft. · PO-441 · a ajuns în depozit",
+tg_msg3_t:"🛒 Comandă mare",tg_msg3_b:"SC Construct SRL · 487 200 Ft · ridicare",
+activity_title:"Activitate recentă",
+act1:"Vânzare #S-1042 — 124 500 Ft (casă NAV)",
+act2:"Comandă furnizor PO-442 creată (Holcim HU)",
+act3:"Livrare #D-118 programată azi 14:00",
+act4:"Stoc redus: Gips-carton 12.5 mm",
+search_product:"Căutare produs…",all_cats:"Toate categoriile",
+cat_cement:"Ciment / beton",cat_paint:"Vopsele",cat_tools:"Scule",cat_finish:"Finisaje",cat_plumbing:"Instalații",
+add_product:"Produs",
+th_name:"Denumire",th_category:"Categorie",th_stock:"Stoc",th_unit:"UM",th_price:"Preț",th_status:"Status",
+th_order:"Comandă",th_date:"Dată",th_client:"Client",th_amount:"Sumă",th_role:"Rol",th_lang:"Limbă",
+th_contact:"Contact",th_city:"Oraș",th_open_pos:"PO deschise",th_supplier:"Furnizor",th_items:"Poziții",
+th_delivery:"Livrare",th_when:"Când",th_driver:"Șofer",th_qty:"Cant.",
+st_ok:"OK",st_low:"Redus",st_out:"Epuizat",st_paid:"Plătit",st_pending:"În așteptare",st_pickup:"De ridicat",st_refund:"Retur",
+st_ordered:"Comandat",st_shipped:"În tranzit",st_received:"Recepționat",st_route:"În cursă",st_delivered:"Livrat",
+all_statuses:"Toate statusurile",search_order:"Căutare comandă…",export:"Export",
+nav_note:"Bonurile sunt tipărite de casa de marcat online conectată la NAV. Facturile se trimit în NAV Online Számla.",
+nav_sent:"NAV: trimis",nav_receipt:"Bon NAV",
+clients_list:"Clienți",client_card:"Fișă client",select_client:"Selectați un client",
+history_purchases:"Achiziții",phone:"Telefon",address:"Adresă",
+new_po:"Comandă furnizor",suppliers_hint:"Achiziții și recepții",suppliers_list:"Furnizori",po_list:"Comenzi și livrări",
+new_delivery:"Livrare",deliveries_hint:"Ridicare din depozit și livrare clienți",
+del_today:"Azi",del_pending:"În așteptare",del_route:"În cursă",
+role_owner_desc:"Acces complet",role_seller_desc:"Magazin și casă",
+role_storekeeper_desc:"Depozit și recepție",role_manager_desc:"Achiziții și livrări",
+perm_all:"Toate modulele și setările",perm_finance:"Finanțe și rapoarte",perm_users:"Gestionare angajați",
+perm_sales:"Vânzări și clienți",perm_stock_view:"Depozit (vizualizare)",perm_no_finance:"Fără acces financiar complet",
+perm_stock:"Stocuri și recepție",perm_po_recv:"Recepție de la furnizori",perm_pick:"Pregătire comenzi",
+perm_po:"Comenzi către furnizori",perm_del:"Planificare livrări",perm_reports:"Rapoarte vânzări",
+team_title:"Echipă",active:"Activ",
+unit_bag:"sac",unit_pcs:"buc.",unit_m:"m",unit_m2:"m²",unit_l:"l",
+weekdays:["Lu","Ma","Mi","Jo","Vi","Sâ","Du"],
+catLabel:{cement:"Ciment / beton",paint:"Vopsele",tools:"Scule",finish:"Finisaje",plumbing:"Instalații"}
+},
+hu:{
+login_title:"BuildCRM",login_sub:"Építőanyag-bolt",
+demo_badge:"DEMO — példaadatok",demo_badge_short:"DEMO",demo_tag:"Demo · Magyarország",
+login_btn:"Bejelentkezés Telegrammal",
+login_note:"A megerősítés a Telegram-botra érkezik. A gomb a demóhoz szimulált belépést indít.",
+nav_dashboard:"Vezérlőpult",nav_warehouse:"Raktár",nav_sales:"Értékesítés",nav_clients:"Ügyfelek",
+nav_suppliers:"Beszállítók",nav_deliveries:"Szállítások",nav_employees:"Alkalmazottak",
+role_owner:"Tulajdonos",role_seller:"Eladó",role_storekeeper:"Raktáros",role_manager:"Manager",
+search_ph:"Keresés…",
+title_dashboard:"Vezérlőpult",title_warehouse:"Raktár / Termékek",title_sales:"Értékesítés / Rendelések",
+title_clients:"Ügyfelek",title_suppliers:"Beszállítók és beszerzés",title_deliveries:"Szállítások",
+title_employees:"Alkalmazottak és szerepkörök",
+kpi_sales_today:"Mai forgalom",kpi_awaiting:"Átadásra vár",kpi_low_stock:"Alacsony készlet",
+kpi_avg_receipt:"Átlagos nyugta",kpi_delivery_today:"mai szállítás",
+vs_yesterday:"tegnaphoz képest",vs_last_month:"előző hónaphoz",need_restock:"utánrendelés kell",
+chart_title:"Forgalom 7 napra",tg_preview_title:"Telegram értesítések",
+tg_msg1_t:"⚠️ Alacsony készlet",tg_msg1_b:"Cement 25 kg — 8 zsák maradt (min. 20)",
+tg_msg2_t:"📦 Beszállítói szállítmány",tg_msg2_b:"BauTrade Kft. · PO-441 · megérkezett",
+tg_msg3_t:"🛒 Nagy rendelés",tg_msg3_b:"SC Construct SRL · 487 200 Ft · átvétel",
+activity_title:"Legutóbbi aktivitás",
+act1:"Eladás #S-1042 — 124 500 Ft (NAV pénztár)",
+act2:"Beszállítói rendelés PO-442 létrehozva (Holcim HU)",
+act3:"Szállítás #D-118 ma 14:00-ra ütemezve",
+act4:"Alacsony készlet: Gipszkarton 12.5 mm",
+search_product:"Termék keresése…",all_cats:"Minden kategória",
+cat_cement:"Cement / beton",cat_paint:"Festékek",cat_tools:"Szerszámok",cat_finish:"Burkolás",cat_plumbing:"Vízvezeték",
+add_product:"Termék",
+th_name:"Név",th_category:"Kategória",th_stock:"Készlet",th_unit:"Egys.",th_price:"Ár",th_status:"Állapot",
+th_order:"Rendelés",th_date:"Dátum",th_client:"Ügyfél",th_amount:"Összeg",th_role:"Szerepkör",th_lang:"Nyelv",
+th_contact:"Kapcsolat",th_city:"Város",th_open_pos:"Nyitott PO",th_supplier:"Beszállító",th_items:"Tételek",
+th_delivery:"Szállítás",th_when:"Mikor",th_driver:"Sofőr",th_qty:"Menny.",
+st_ok:"Rendben",st_low:"Alacsony",st_out:"Elfogyott",st_paid:"Fizetve",st_pending:"Függőben",st_pickup:"Átadásra",st_refund:"Visszatérítés",
+st_ordered:"Megrendelve",st_shipped:"Úton",st_received:"Bevételezve",st_route:"Szállítás alatt",st_delivered:"Kiszállítva",
+all_statuses:"Minden állapot",search_order:"Rendelés keresése…",export:"Export",
+nav_note:"A nyugtákat a NAV-hoz kapcsolt online pénztárgép nyomtatja. A számlák a NAV Online Számlára mennek.",
+nav_sent:"NAV: elküldve",nav_receipt:"NAV nyugta",
+clients_list:"Ügyfelek",client_card:"Ügyfélkártya",select_client:"Válasszon ügyfelet",
+history_purchases:"Vásárlások",phone:"Telefon",address:"Cím",
+new_po:"Beszállítói rendelés",suppliers_hint:"Beszerzés és beérkező szállítmányok",suppliers_list:"Beszállítók",po_list:"Rendelések és szállítmányok",
+new_delivery:"Szállítás",deliveries_hint:"Raktári átadás és ügyfélszállítás",
+del_today:"Ma",del_pending:"Várakozik",del_route:"Úton",
+role_owner_desc:"Teljes hozzáférés",role_seller_desc:"Bolt és pénztár",
+role_storekeeper_desc:"Raktár és bevételezés",role_manager_desc:"Beszerzés és szállítás",
+perm_all:"Minden modul és beállítás",perm_finance:"Pénzügyek és jelentések",perm_users:"Alkalmazottak kezelése",
+perm_sales:"Értékesítés és ügyfelek",perm_stock_view:"Raktár (megtekintés)",perm_no_finance:"Nincs teljes pénzügyi hozzáférés",
+perm_stock:"Készlet és bevételezés",perm_po_recv:"Beszállítói bevételezés",perm_pick:"Rendelés összeállítás",
+perm_po:"Beszállítói rendelések",perm_del:"Szállítások tervezése",perm_reports:"Értékesítési jelentések",
+team_title:"Csapat",active:"Aktív",
+unit_bag:"zsák",unit_pcs:"db",unit_m:"m",unit_m2:"m²",unit_l:"l",
+weekdays:["H","K","Sze","Cs","P","Szo","V"],
+catLabel:{cement:"Cement / beton",paint:"Festékek",tools:"Szerszámok",finish:"Burkolás",plumbing:"Vízvezeték"}
+}
+};
+
+const PRODUCTS = [
+  {sku:"CEM-25", name:{ru:"Цемент Portland 25 кг", ro:"Ciment Portland 25 kg", hu:"Portland cement 25 kg"}, cat:"cement", stock:8, min:20, unit:"bag", price:2890},
+  {sku:"CEM-50", name:{ru:"Цемент Portland 50 кг", ro:"Ciment Portland 50 kg", hu:"Portland cement 50 kg"}, cat:"cement", stock:42, min:15, unit:"bag", price:4990},
+  {sku:"PNT-W10", name:{ru:"Краска белая интерьер 10 л", ro:"Vopsea albă interior 10 l", hu:"Beltéri fehér festék 10 l"}, cat:"paint", stock:15, min:5, unit:"l", price:12990},
+  {sku:"PNT-F5", name:{ru:"Фасадная краска 5 л", ro:"Vopsea fațadă 5 l", hu:"Homlokzatfesték 5 l"}, cat:"paint", stock:3, min:8, unit:"l", price:8990},
+  {sku:"GYP-125", name:{ru:"Гипсокартон 12.5 мм", ro:"Gips-carton 12.5 mm", hu:"Gipszkarton 12.5 mm"}, cat:"finish", stock:12, min:30, unit:"pcs", price:3450},
+  {sku:"TIL-30", name:{ru:"Плитка керамическая 30×30", ro:"Gresie ceramică 30×30", hu:"Kerámia csempe 30×30"}, cat:"finish", stock:180, min:50, unit:"m2", price:4200},
+  {sku:"PIP-20", name:{ru:"Труба ППР 20 мм", ro:"Țeavă PPR 20 mm", hu:"PPR cső 20 mm"}, cat:"plumbing", stock:95, min:40, unit:"m", price:890},
+  {sku:"TLS-MX", name:{ru:"Миксер строительный 1200W", ro:"Mixer construcții 1200W", hu:"Építőipari keverő 1200W"}, cat:"tools", stock:4, min:2, unit:"pcs", price:28900},
+  {sku:"TLS-DR", name:{ru:"Дрель ударная 800W", ro:"Mașină de găurit 800W", hu:"Ütvefúrógép 800W"}, cat:"tools", stock:0, min:2, unit:"pcs", price:24900},
+  {sku:"PLB-MX", name:{ru:"Смеситель для раковины", ro:"Baterie lavoar", hu:"Mosdócsaptelep"}, cat:"plumbing", stock:7, min:3, unit:"pcs", price:18900}
+];
+const SALES = [
+  {id:"S-1042", date:"2026-11-09 09:48", client:"Nagy Péter", amount:124500, status:"paid", nav:"sent"},
+  {id:"S-1041", date:"2026-11-09 08:22", client:"SC Construct SRL", amount:487200, status:"pickup", nav:"sent"},
+  {id:"S-1040", date:"2026-11-08 16:05", client:"Szabó Anna", amount:34500, status:"paid", nav:"sent"},
+  {id:"S-1039", date:"2026-11-08 14:40", client:"Popescu Andrei", amount:89200, status:"pending", nav:"receipt"},
+  {id:"S-1038", date:"2026-11-07 11:15", client:"Kovács János", amount:15600, status:"refund", nav:"sent"},
+  {id:"S-1037", date:"2026-11-07 09:50", client:"Molnár Éva", amount:210400, status:"paid", nav:"sent"},
+  {id:"S-1036", date:"2026-11-06 15:20", client:"Horváth Gábor", amount:67200, status:"pickup", nav:"sent"}
+];
+const CLIENTS = [
+  {id:1, name:"Kovács János", phone:"+36 30 111 2233", address:"Budapest XI., Bartók Béla út 42.",
+    purchases:[{id:"S-1038", date:"2026-11-07", amount:15600},{id:"S-1012", date:"2026-10-12", amount:78400}]},
+  {id:2, name:"Popescu Andrei", phone:"+36 20 555 7788", address:"Debrecen, Piac utca 12.",
+    purchases:[{id:"S-1039", date:"2026-11-08", amount:89200}]},
+  {id:3, name:"SC Construct SRL", phone:"+36 1 234 5678", address:"Budapest XIII., Váci út 88.",
+    purchases:[{id:"S-1041", date:"2026-11-09", amount:487200},{id:"S-1020", date:"2026-10-28", amount:912000}]},
+  {id:4, name:"Nagy Péter", phone:"+36 70 999 1122", address:"Szeged, Kárász u. 5.",
+    purchases:[{id:"S-1042", date:"2026-11-09", amount:124500}]},
+  {id:5, name:"Molnár Éva", phone:"+36 30 444 5566", address:"Pécs, Király u. 19.",
+    purchases:[{id:"S-1037", date:"2026-11-07", amount:210400}]}
+];
+const SUPPLIERS = [
+  {id:1, name:"BauTrade Kft.", contact:"+36 1 555 0101", city:"Budapest", open:1},
+  {id:2, name:"Holcim HU", contact:"+36 22 555 0202", city:"Tatabánya", open:1},
+  {id:3, name:"ColorMix SRL", contact:"+40 264 555 303", city:"Cluj-Napoca", open:0},
+  {id:4, name:"ToolPro Kft.", contact:"+36 62 555 0404", city:"Szeged", open:1}
+];
+const POS = [
+  {id:"PO-442", supplier:"Holcim HU", date:"2026-11-09", items:4, amount:286400, status:"ordered"},
+  {id:"PO-441", supplier:"BauTrade Kft.", date:"2026-11-08", items:12, amount:512800, status:"received"},
+  {id:"PO-440", supplier:"ToolPro Kft.", date:"2026-11-06", items:3, amount:89700, status:"shipped"},
+  {id:"PO-439", supplier:"ColorMix SRL", date:"2026-11-03", items:8, amount:156200, status:"received"},
+  {id:"PO-438", supplier:"BauTrade Kft.", date:"2026-10-28", items:20, amount:740500, status:"received"}
+];
+const DELIVERIES = [
+  {id:"D-118", client:"SC Construct SRL", address:"Budapest XIII., Váci út 88.", when:"2026-11-09 14:00", driver:"Kovács Gábor", amount:487200, status:"pending"},
+  {id:"D-117", client:"Nagy Péter", address:"Szeged, Kárász u. 5.", when:"2026-11-09 11:30", driver:"Kovács Gábor", amount:124500, status:"route"},
+  {id:"D-116", client:"Molnár Éva", address:"Pécs, Király u. 19.", when:"2026-11-08 16:00", driver:"Szabó István", amount:210400, status:"delivered"},
+  {id:"D-115", client:"Horváth Gábor", address:"Győr, Baross út 3.", when:"2026-11-08 10:00", driver:"Szabó István", amount:67200, status:"delivered"},
+  {id:"D-114", client:"Popescu Andrei", address:"Debrecen, Piac utca 12.", when:"2026-11-07 15:30", driver:"Kovács Gábor", amount:89200, status:"delivered"}
+];
+const EMPLOYEES = [
+  {name:"Vitaliy M.", role:"owner", tg:"@vitaliy_m", lang:"ru"},
+  {name:"Nagy Péter", role:"seller", tg:"@nagy_p", lang:"hu"},
+  {name:"Popescu Maria", role:"seller", tg:"@maria_p", lang:"ro"},
+  {name:"Ionescu Radu", role:"storekeeper", tg:"@ionescu_r", lang:"ro"},
+  {name:"Szabó Katalin", role:"manager", tg:"@szabo_k", lang:"hu"},
+  {name:"Kovács Gábor", role:"storekeeper", tg:"@kovacs_g", lang:"hu"}
+];
+
+let lang="ru", page="dashboard", selectedClient=null, loggedIn=false;
+
+function t(key){const d=I18N[lang]||I18N.ru; return d[key]!==undefined?d[key]:(I18N.ru[key]||key);}
+function tn(obj){if(!obj)return""; if(typeof obj==="string")return obj; return obj[lang]||obj.ru||obj.hu||obj.ro||"";}
+function fmt(n){return n.toLocaleString("hu-HU")+" Ft";}
+function unitLabel(u){return t("unit_"+u)||u;}
+
+function parseHash(){
+  const h=(location.hash||"#login").replace(/^#/,"");
+  const parts=h.split("&");
+  const screen=parts[0]||"login";
+  const params={};
+  parts.slice(1).forEach(p=>{const [k,v]=p.split("="); if(k) params[k]=decodeURIComponent(v||"");});
+  return {screen, params};
+}
+function setHash(screen, params){
+  params=params||{};
+  const bits=[screen];
+  Object.keys(params).forEach(k=>{
+    if(params[k]!==undefined && params[k]!==null && params[k]!=="")
+      bits.push(k+"="+encodeURIComponent(params[k]));
+  });
+  const next="#"+bits.join("&");
+  if(location.hash!==next) location.hash=next; else applyRoute();
+}
+function applyRoute(){
+  const {screen, params}=parseHash();
+  if(params.lang && I18N[params.lang]) lang=params.lang;
+  if(screen==="login"||!screen){ showLogin(); applyI18n(); return; }
+  loggedIn=true;
+  const ok=["dashboard","warehouse","sales","clients","suppliers","deliveries","employees"];
+  page=ok.indexOf(screen)>=0?screen:"dashboard";
+  showApp();
+  if(params.client) selectedClient=parseInt(params.client,10);
+  applyI18n();
+  renderAll();
+}
+function showLogin(){document.getElementById("login-screen").style.display="flex";document.getElementById("app").classList.remove("open");}
+function showApp(){document.getElementById("login-screen").style.display="none";document.getElementById("app").classList.add("open");}
+function applyI18n(){
+  document.querySelectorAll("[data-i18n]").forEach(el=>{el.textContent=t(el.getAttribute("data-i18n"));});
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el=>{el.placeholder=t(el.getAttribute("data-i18n-placeholder"));});
+  document.querySelectorAll("[data-setlang]").forEach(btn=>{btn.classList.toggle("active", btn.getAttribute("data-setlang")===lang);});
+  document.documentElement.lang=lang;
+}
+function renderAll(){
+  document.querySelectorAll(".nav-item").forEach(n=>{n.classList.toggle("active", n.getAttribute("data-nav")===page);});
+  document.querySelectorAll(".page").forEach(p=>{p.classList.toggle("active", p.id==="page-"+page);});
+  document.getElementById("page-title").textContent=t("title_"+page);
+  renderWarehouse(); renderSales(); renderClients(); renderSuppliers(); renderDeliveries(); renderEmployees(); drawChart();
+}
+function renderWarehouse(){
+  const q=(document.getElementById("wh-search").value||"").toLowerCase();
+  const cat=document.getElementById("wh-cat").value;
+  const body=document.getElementById("wh-body"); body.innerHTML="";
+  PRODUCTS.filter(p=>{
+    if(cat && p.cat!==cat) return false;
+    const name=tn(p.name).toLowerCase();
+    if(q && !name.includes(q) && !p.sku.toLowerCase().includes(q)) return false;
+    return true;
+  }).forEach(p=>{
+    let status,pill,pct,barColor;
+    if(p.stock===0){status=t("st_out");pill="pill-danger";pct=0;barColor="#dc2626";}
+    else if(p.stock<p.min){status=t("st_low");pill="pill-warn";pct=Math.round(p.stock/p.min*100);barColor="#d97706";}
+    else{status=t("st_ok");pill="pill-ok";pct=Math.min(100,Math.round(p.stock/(p.min*3)*100));barColor="#16a34a";}
+    const catLab=(I18N[lang].catLabel&&I18N[lang].catLabel[p.cat])||p.cat;
+    const tr=document.createElement("tr");
+    tr.innerHTML="<td><code>"+p.sku+"</code></td><td><strong>"+tn(p.name)+"</strong></td><td>"+catLab+"</td><td><div style=\"display:flex;align-items:center;gap:8px;\"><strong>"+p.stock+"</strong><div class=\"stock-bar\"><span style=\"width:"+pct+"%;background:"+barColor+"\"></span></div></div></td><td>"+unitLabel(p.unit)+"</td><td>"+fmt(p.price)+"</td><td><span class=\"pill "+pill+"\">"+status+"</span></td>";
+    body.appendChild(tr);
+  });
+}
+function renderSales(){
+  const body=document.getElementById("sales-body"); body.innerHTML="";
+  SALES.forEach(s=>{
+    let pill="pill-ok", st=t("st_paid");
+    if(s.status==="pending"){pill="pill-warn";st=t("st_pending");}
+    if(s.status==="pickup"){pill="pill-info";st=t("st_pickup");}
+    if(s.status==="refund"){pill="pill-danger";st=t("st_refund");}
+    const nav=s.nav==="sent"?"<span class=\"pill pill-nav\">"+t("nav_sent")+"</span>":"<span class=\"pill pill-info\">"+t("nav_receipt")+"</span>";
+    const tr=document.createElement("tr");
+    tr.innerHTML="<td><strong>"+s.id+"</strong></td><td>"+s.date+"</td><td>"+s.client+"</td><td>"+fmt(s.amount)+"</td><td><span class=\"pill "+pill+"\">"+st+"</span></td><td>"+nav+"</td>";
+    body.appendChild(tr);
+  });
+}
+function renderClients(){
+  const list=document.getElementById("client-list"); list.innerHTML="";
+  CLIENTS.forEach(c=>{
+    const div=document.createElement("div");
+    div.className="cli"+(selectedClient===c.id?" active":"");
+    div.innerHTML="<div class=\"cn\">"+c.name+"</div><div class=\"cm\">"+c.phone+"</div>";
+    div.onclick=function(){ selectedClient=c.id; const parsed=parseHash(); setHash("clients", Object.assign({}, parsed.params, {lang:lang, client:c.id})); };
+    list.appendChild(div);
+  });
+  const detail=document.getElementById("client-detail");
+  const c=CLIENTS.find(x=>x.id===selectedClient);
+  if(!c){ detail.innerHTML="<p class=\"empty\">"+t("select_client")+"</p>"; return; }
+  const total=c.purchases.reduce((a,p)=>a+p.amount,0);
+  const purch=c.purchases.map(p=>"<tr><td>"+p.id+"</td><td>"+p.date+"</td><td>"+fmt(p.amount)+"</td></tr>").join("")||"<tr><td colspan=\"3\">—</td></tr>";
+  detail.innerHTML="<h3 style=\"margin-bottom:4px;\">"+c.name+"</h3><div style=\"color:var(--muted);font-size:13px;margin-bottom:14px;\">"+t("phone")+": "+c.phone+"<br>"+t("address")+": "+c.address+"</div><div class=\"section-title\">"+t("history_purchases")+"</div><table class=\"est-table\"><thead><tr><th>ID</th><th>"+t("th_date")+"</th><th>"+t("th_amount")+"</th></tr></thead><tbody>"+purch+"</tbody></table><div style=\"text-align:right;font-weight:800;margin-top:10px;\">"+t("th_amount")+": "+fmt(total)+"</div>";
+}
+function renderSuppliers(){
+  const sb=document.getElementById("sup-body"); sb.innerHTML="";
+  SUPPLIERS.forEach(s=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML="<td><strong>"+s.name+"</strong></td><td>"+s.contact+"</td><td>"+s.city+"</td><td>"+(s.open?("<span class=\"pill pill-warn\">"+s.open+"</span>"):"<span class=\"pill pill-ok\">0</span>")+"</td>";
+    sb.appendChild(tr);
+  });
+  const pb=document.getElementById("po-body"); pb.innerHTML="";
+  POS.forEach(po=>{
+    let pill="pill-info", st=t("st_ordered");
+    if(po.status==="shipped"){pill="pill-warn";st=t("st_shipped");}
+    if(po.status==="received"){pill="pill-ok";st=t("st_received");}
+    const tr=document.createElement("tr");
+    tr.innerHTML="<td><strong>"+po.id+"</strong></td><td>"+po.supplier+"</td><td>"+po.date+"</td><td>"+po.items+"</td><td>"+fmt(po.amount)+"</td><td><span class=\"pill "+pill+"\">"+st+"</span></td>";
+    pb.appendChild(tr);
+  });
+}
+function renderDeliveries(){
+  const today=DELIVERIES.filter(d=>d.when.startsWith("2026-11-09")).length;
+  const pending=DELIVERIES.filter(d=>d.status==="pending").length;
+  const route=DELIVERIES.filter(d=>d.status==="route").length;
+  document.getElementById("del-kpis").innerHTML=
+    "<div class=\"del-card\"><div class=\"dh\">"+t("del_today")+"</div><div class=\"dm\">"+today+"</div></div>"+
+    "<div class=\"del-card st-pending\"><div class=\"dh\">"+t("del_pending")+"</div><div class=\"dm\">"+pending+"</div></div>"+
+    "<div class=\"del-card st-route\"><div class=\"dh\">"+t("del_route")+"</div><div class=\"dm\">"+route+"</div></div>";
+  const body=document.getElementById("del-body"); body.innerHTML="";
+  DELIVERIES.forEach(d=>{
+    let pill="pill-warn", st=t("st_pending");
+    if(d.status==="route"){pill="pill-info";st=t("st_route");}
+    if(d.status==="delivered"){pill="pill-ok";st=t("st_delivered");}
+    const tr=document.createElement("tr");
+    tr.innerHTML="<td><strong>"+d.id+"</strong></td><td>"+d.client+"</td><td>"+d.address+"</td><td>"+d.when+"</td><td>"+d.driver+"</td><td>"+fmt(d.amount)+"</td><td><span class=\"pill "+pill+"\">"+st+"</span></td>";
+    body.appendChild(tr);
+  });
+}
+function renderEmployees(){
+  const body=document.getElementById("emp-body"); body.innerHTML="";
+  EMPLOYEES.forEach(e=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML="<td><strong>"+e.name+"</strong></td><td><span class=\"pill pill-info\">"+t("role_"+e.role)+"</span></td><td>"+e.tg+"</td><td>"+e.lang.toUpperCase()+"</td><td><span class=\"pill pill-ok\">"+t("active")+"</span></td>";
+    body.appendChild(tr);
+  });
+}
+function drawChart(){
+  const canvas=document.getElementById("salesChart"); if(!canvas) return;
+  const ctx=canvas.getContext("2d");
+  const dpr=window.devicePixelRatio||1;
+  const W=canvas.clientWidth||640, H=180;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+"px"; canvas.style.height=H+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+  const data=[320,410,280,520,460,390,487];
+  const labels=I18N[lang].weekdays||I18N.ru.weekdays;
+  const pad={l:40,r:16,t:16,b:28};
+  const max=Math.max.apply(null,data)*1.15;
+  const cw=W-pad.l-pad.r, ch=H-pad.t-pad.b;
+  const barW=cw/data.length*0.55, gap=cw/data.length;
+  ctx.strokeStyle="#e2e8f0"; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=pad.t+(ch/4)*i; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();}
+  data.forEach((v,i)=>{
+    const bh=(v/max)*ch, x=pad.l+gap*i+(gap-barW)/2, y=pad.t+ch-bh;
+    const grad=ctx.createLinearGradient(0,y,0,y+bh); grad.addColorStop(0,"#e67e22"); grad.addColorStop(1,"#f39c12");
+    ctx.fillStyle=grad;
+    const r=4; ctx.beginPath();
+    ctx.moveTo(x,y+bh); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.lineTo(x+barW-r,y); ctx.quadraticCurveTo(x+barW,y,x+barW,y+r); ctx.lineTo(x+barW,y+bh); ctx.closePath(); ctx.fill();
+    ctx.fillStyle="#64748b"; ctx.font="11px sans-serif"; ctx.textAlign="center";
+    ctx.fillText(labels[i], x+barW/2, H-8);
+  });
+}
+document.getElementById("btn-login").addEventListener("click", function(){ setHash("dashboard",{lang:lang}); });
+document.querySelectorAll("[data-setlang]").forEach(btn=>{
+  btn.addEventListener("click", function(){
+    lang=btn.getAttribute("data-setlang");
+    const parsed=parseHash();
+    const next=Object.assign({}, parsed.params, {lang:lang});
+    if(selectedClient) next.client=selectedClient;
+    setHash(parsed.screen||(loggedIn?page:"login"), next);
+  });
+});
+document.querySelectorAll(".nav-item").forEach(n=>{
+  n.addEventListener("click", function(){ setHash(n.getAttribute("data-nav"), {lang:lang}); });
+});
+document.getElementById("wh-search").addEventListener("input", renderWarehouse);
+document.getElementById("wh-cat").addEventListener("change", renderWarehouse);
+window.addEventListener("hashchange", applyRoute);
+window.addEventListener("resize", function(){ if(loggedIn) drawChart(); });
+if(!location.hash) location.hash="#login&lang=ru"; else applyRoute();
+</script>
+</body>
+</html>
